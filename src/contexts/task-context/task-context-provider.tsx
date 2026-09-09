@@ -3,6 +3,7 @@ import { initialTaskState } from "./initial-task-state";
 import { TaskContext } from "./task-context";
 import { taskReducer } from "./task-reducer";
 import { TimerWorkerManager } from "../../workers/timer-worker-manager";
+import { loadBeep } from "../../utils/loadBeep";
 import { TaskActionTypes } from "./task-actions";
 
 type TaskContextProviderProps = {
@@ -14,6 +15,8 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
 
   // ref keeps the worker singleton out of render (avoids React Compiler memoization)
   const workerRef = useRef<TimerWorkerManager>(null);
+
+  const playBeepRef = useRef<ReturnType<typeof loadBeep> | null>(null);
 
   useEffect(() => {
     if (!state.activeTask) {
@@ -32,6 +35,10 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
       const countDownSeconds = e.data;
 
       if (countDownSeconds <= 0) {
+        if (playBeepRef.current) {
+          playBeepRef.current();
+          playBeepRef.current = null;
+        }
         dispatch({ type: TaskActionTypes.COMPLETE });
         worker.terminate();
         workerRef.current = null;
@@ -45,6 +52,14 @@ export function TaskContextProvider({ children }: TaskContextProviderProps) {
 
     worker.postMessage(state);
   }, [state]);
+
+  useEffect(() => {
+    if (state.activeTask && playBeepRef.current === null) {
+      playBeepRef.current = loadBeep();
+    } else {
+      playBeepRef.current = null;
+    }
+  }, [state.activeTask]);
 
   return (
     <TaskContext.Provider value={{ state, dispatch }}>

@@ -3,7 +3,6 @@ import type { TaskStateModel } from "../models/task-state-model";
 let isRunning = false;
 
 self.onmessage = (event: MessageEvent<TaskStateModel>) => {
-  console.log("Worker received message:", event.data);
 
   if (isRunning) return;
 
@@ -26,8 +25,6 @@ self.onmessage = (event: MessageEvent<TaskStateModel>) => {
 
     const now = Date.now();
     countDownSeconds = Math.floor((endDate - now) / 1000);
-
-    console.log("tic tac timer", countDownSeconds);
 
     setTimeout(ticTacTimer, 1000);
   }
